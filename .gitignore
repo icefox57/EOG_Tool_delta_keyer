@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+delta_keyer_config.json
+_keyed_output/
+.DS_Store
+Thumbs.db
