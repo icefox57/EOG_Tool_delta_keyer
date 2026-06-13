@@ -4,6 +4,18 @@
 
 轻量批量抠图与调色工具，面向绿幕角色图、AI 生成素材、游戏精灵图和宣传图合成工作流。它提供类似 DaVinci Resolve Delta Keyer 的低/高 matte 阈值控制，同时加入批处理、原图分辨率预览、多配置档、只调色模式等更适合日常素材生产的小工具能力。
 
+## 项目由来
+
+这个免费开源工具是在开发 **Echoes of Greed / Echoes of Desire - Chaos Void** 的美术素材管线时顺手做出来的。项目里有大量 AI 生成角色、绿幕抠图、宣传图合成和游戏素材整理工作，单独为了批量抠图与轻量调色反复打开大型视频软件并不高效，所以我们把这套流程做成了一个更轻、更直接的小工具。
+
+如果这个工具帮到了你，也欢迎顺手关注和支持游戏项目：
+
+- Patreon: [https://www.patreon.com/icefox57](https://www.patreon.com/icefox57)
+- Itch.io: [https://icefoxlab.itch.io/echoes-of-greed](https://icefoxlab.itch.io/echoes-of-greed)
+- F95Zone: [https://f95zone.to/threads/echoes-of-greed-v0-1-icefox.283306/](https://f95zone.to/threads/echoes-of-greed-v0-1-icefox.283306/)
+
+也欢迎体验 **Echoes of Greed**，看看这个工具最初服务的游戏项目。
+
 ## 功能
 
 - 批量读取单张图片或整个文件夹。
@@ -217,6 +229,18 @@ character.png -> character_keyed.png
 ## English
 
 Lightweight batch keying and color-adjustment tool for green-screen character images, AI-generated assets, game sprites, and poster-compositing workflows. It provides low/high matte threshold controls similar in spirit to DaVinci Resolve Delta Keyer, plus practical production features such as batch processing, full-resolution preview, multiple profiles, and tone-only processing.
+
+## Project Origin
+
+This free and open-source tool was created while building the art-production pipeline for **Echoes of Greed / Echoes of Desire - Chaos Void**. The project involves a lot of AI-generated characters, green-screen keying, poster compositing, and game-asset cleanup. Opening a full video-editing suite just to batch-key images and do light tone matching felt too heavy, so this tool grew out of that workflow.
+
+If the tool helps you, please consider checking out and supporting the game:
+
+- Patreon: [https://www.patreon.com/icefox57](https://www.patreon.com/icefox57)
+- Itch.io: [https://icefoxlab.itch.io/echoes-of-greed](https://icefoxlab.itch.io/echoes-of-greed)
+- F95Zone: [https://f95zone.to/threads/echoes-of-greed-v0-1-icefox.283306/](https://f95zone.to/threads/echoes-of-greed-v0-1-icefox.283306/)
+
+You are also very welcome to try **Echoes of Greed**, the game project this tool was originally made for.
 
 ## Features
 
