@@ -11,8 +11,7 @@
 如果这个工具帮到了你，也欢迎顺手关注和支持游戏项目：
 
 - Patreon: [https://www.patreon.com/icefox57](https://www.patreon.com/icefox57)
-- Itch.io: [https://icefoxlab.itch.io/echoes-of-greed](https://icefoxlab.itch.io/echoes-of-greed)
-- F95Zone: [https://f95zone.to/threads/echoes-of-greed-v0-1-icefox.283306/](https://f95zone.to/threads/echoes-of-greed-v0-1-icefox.283306/)
+- X: [https://x.com/icefox_lab](https://x.com/icefox_lab)
 
 也欢迎体验 **Echoes of Greed**，看看这个工具最初服务的游戏项目。
 
@@ -237,8 +236,7 @@ This free and open-source tool was created while building the art-production pip
 If the tool helps you, please consider checking out and supporting the game:
 
 - Patreon: [https://www.patreon.com/icefox57](https://www.patreon.com/icefox57)
-- Itch.io: [https://icefoxlab.itch.io/echoes-of-greed](https://icefoxlab.itch.io/echoes-of-greed)
-- F95Zone: [https://f95zone.to/threads/echoes-of-greed-v0-1-icefox.283306/](https://f95zone.to/threads/echoes-of-greed-v0-1-icefox.283306/)
+- X: [https://x.com/icefox_lab](https://x.com/icefox_lab)
 
 You are also very welcome to try **Echoes of Greed**, the game project this tool was originally made for.
 
