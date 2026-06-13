@@ -4,6 +4,8 @@
 
 轻量批量抠图与调色工具，面向绿幕角色图、AI 生成素材、游戏精灵图和宣传图合成工作流。它提供类似 DaVinci Resolve Delta Keyer 的低/高 matte 阈值控制，同时加入批处理、原图分辨率预览、多配置档、只调色模式等更适合日常素材生产的小工具能力。
 
+![EOG Delta Keyer preview](assets/eog-delta-keyer-preview.png)
+
 ## 项目由来
 
 这个免费开源工具是在开发 **Echoes of Greed / Echoes of Desire - Chaos Void** 的美术素材管线时顺手做出来的。项目里有大量 AI 生成角色、绿幕抠图、宣传图合成和游戏素材整理工作，单独为了批量抠图与轻量调色反复打开大型视频软件并不高效，所以我们把这套流程做成了一个更轻、更直接的小工具。
