@@ -1,10 +1,224 @@
 # EOG Delta Keyer
 
-中文 | [English](#english)
-
-轻量批量抠图与调色工具，面向绿幕角色图、AI 生成素材、游戏精灵图和宣传图合成工作流。它提供类似 DaVinci Resolve Delta Keyer 的低/高 matte 阈值控制，同时加入批处理、原图分辨率预览、多配置档、只调色模式等更适合日常素材生产的小工具能力。
+English | [Chinese](#中文)
 
 ![EOG Delta Keyer preview](assets/eog-delta-keyer-preview.png)
+
+Lightweight batch keying and color-adjustment tool for green-screen character images, AI-generated assets, game sprites, and poster-compositing workflows. It provides low/high matte threshold controls similar in spirit to DaVinci Resolve Delta Keyer, plus practical production features such as batch processing, full-resolution preview, multiple profiles, and tone-only processing.
+
+## Project Origin
+
+This free and open-source tool was created while building the art-production pipeline for **Echoes of Greed / Echoes of Desire - Chaos Void**. The project involves a lot of AI-generated characters, green-screen keying, poster compositing, and game-asset cleanup. Opening a full video-editing suite just to batch-key images and do light tone matching felt too heavy, so this tool grew out of that workflow.
+
+If the tool helps you, please consider checking out and supporting the game:
+
+- Patreon: [https://www.patreon.com/icefox57](https://www.patreon.com/icefox57)
+- X: [https://x.com/icefox_lab](https://x.com/icefox_lab)
+
+You are also very welcome to try **Echoes of Greed**, the game project this tool was originally made for.
+
+## Features
+
+- Process a single image or an entire folder.
+- Supports PNG/JPG/WEBP/BMP/TIF input.
+- Exports PNG files with alpha, without overwriting source images.
+- Keying and tone adjustment are independent modules.
+- Supports key-only, tone-only, and key-plus-tone workflows.
+- Default `dominance` mode is optimized for green/blue screens and avoids making dark clothing semi-transparent.
+- Low/high threshold controls operate on the matte/alpha.
+- Optional edge soften and despill.
+- Brightness, contrast, saturation, and Gamma controls.
+- Built-in tone presets: `poster_soft`, `lighten`, and `muted`.
+- Full-resolution preview with zoom for inspecting hair, green edges, and semi-transparent details.
+- Hover tooltips for technical controls.
+- Multiple saved profiles, such as `Default`, `Profile A`, and `Profile B`.
+
+## Installation
+
+Requires Python 3.10+:
+
+```bash
+pip install pillow numpy
+```
+
+## Launching The GUI
+
+On Windows, double-click:
+
+```bat
+run_delta_keyer_gui.cmd
+```
+
+Or launch from a terminal:
+
+```bash
+python delta_keyer.py --gui
+```
+
+In the GUI, you can set:
+
+- Profile buttons at the top for switching workflows.
+- Add Profile, which copies the current settings into a new profile.
+- Input and output folders.
+- Whether keying is enabled.
+- Whether tone adjustment is enabled.
+- Key color, for example `#00FF00`.
+- Low/high thresholds, for example `0.3` / `0.9`.
+- Keying mode. Use `dominance` for green-screen characters by default.
+- Edge soften and despill.
+- Tone preset and manual controls: brightness, contrast, saturation, Gamma.
+- Recursive folder processing.
+- Output filename suffix.
+
+Settings are saved to `delta_keyer_config.json` and restored on the next launch.
+
+## Profiles
+
+The GUI starts with a default profile. Click `Add Profile` and enter a name such as `Profile A` or `Profile B`; a new button will appear at the top.
+
+Each profile stores:
+
+- Input/output paths
+- Keying enabled/disabled
+- Tone enabled/disabled
+- Key color
+- Low/high thresholds
+- Keying mode
+- Edge soften
+- Despill
+- Tone preset
+- Brightness, contrast, saturation, Gamma
+- Preview zoom
+- Recursive mode
+- Output suffix
+
+When switching profiles, the tool saves the current profile before loading the selected one.
+
+## Tone Tips
+
+If a green-screen character looks too dark after keying, start with the `poster_soft` preset. It brightens the character, lowers contrast, and slightly reduces saturation, which often fits soft poster-style compositions better.
+
+Controls:
+
+- Brightness: overall light/dark adjustment.
+- Contrast: lowers or increases tonal hardness.
+- Saturation: controls color intensity.
+- Gamma: mainly affects midtones; values below `1` brighten midtones without pushing highlights as hard.
+
+## CLI Examples
+
+Key and apply a tone preset:
+
+```bash
+python delta_keyer.py "./input" \
+  -o "./output" \
+  --color "#00FF00" \
+  --low 0.3 \
+  --high 0.9 \
+  --metric dominance \
+  --preset poster_soft
+```
+
+Process subfolders recursively:
+
+```bash
+python delta_keyer.py "./input" \
+  -o "./output" \
+  --color "#00FF00" \
+  --low 0.3 \
+  --high 0.9 \
+  --metric dominance \
+  --recursive \
+  --brightness 1.18 \
+  --contrast 0.82 \
+  --saturation 0.88 \
+  --gamma 0.86
+```
+
+Tone only, no keying:
+
+```bash
+python delta_keyer.py "./poster.jpg" \
+  -o "./tone_only" \
+  --no-key \
+  --preset poster_soft
+```
+
+Key only, no tone adjustment:
+
+```bash
+python delta_keyer.py "./character.png" \
+  -o "./keyed" \
+  --no-tone \
+  --color "#00FF00" \
+  --low 0.3 \
+  --high 0.9
+```
+
+## CLI Options
+
+| Option | Description |
+| --- | --- |
+| `input` | Input image or folder |
+| `-o`, `--output` | Output folder |
+| `--no-key` | Disable keying and keep the original alpha |
+| `--no-tone` | Disable tone adjustment |
+| `-c`, `--color` | Key color, for example `#00FF00` or `0,255,0` |
+| `--low` | Low matte threshold, range `0-1` |
+| `--high` | High matte threshold, range `0-1` |
+| `--soften` | Alpha blur radius in pixels |
+| `--despill` | Key-color spill suppression, range `0-1` |
+| `--metric` | Keying mode: `dominance` or `rgb` |
+| `--preset` | Tone preset: `none`, `poster_soft`, `lighten`, `muted` |
+| `--brightness` | Brightness multiplier |
+| `--contrast` | Contrast multiplier |
+| `--saturation` | Saturation multiplier |
+| `--gamma` | Gamma; values below `1` brighten midtones |
+| `-r`, `--recursive` | Process subfolders |
+| `--suffix` | Output filename suffix |
+| `--gui` | Open the GUI |
+
+## Threshold Logic
+
+The default `dominance` mode is designed for green/blue screens. It first computes a raw foreground alpha: pixels that look like the key color get a lower alpha, while pixels that do not look like the key color get a higher alpha.
+
+Then it applies matte threshold logic:
+
+- Below the low threshold: forced to black matte, meaning transparent.
+- Above the high threshold: forced to white matte, meaning opaque.
+- Between the two thresholds: keeps a smooth alpha transition.
+
+`dominance` checks whether the key-color channel dominates the other channels. For green screen, that means the green channel must clearly dominate red and blue. This avoids the common RGB-distance failure where dark clothing or gray areas become semi-transparent.
+
+`rgb` mode computes raw foreground alpha using normalized RGB distance from the key color, then applies the same low/high threshold logic.
+
+DaVinci Resolve Delta Keyer is not an open implementation, so this tool aims for similar control behavior and practical results, not pixel-perfect equivalence.
+
+## Output
+
+All outputs are PNG files:
+
+```text
+<source filename><suffix>.png
+```
+
+Default suffix:
+
+```text
+_keyed
+```
+
+Example:
+
+```text
+character.png -> character_keyed.png
+```
+
+---
+
+## 中文
+
+轻量批量抠图与调色工具，面向绿幕角色图、AI 生成素材、游戏精灵图和宣传图合成工作流。它提供类似 DaVinci Resolve Delta Keyer 的低/高 matte 阈值控制，同时加入批处理、原图分辨率预览、多配置档、只调色模式等更适合日常素材生产的小工具能力。
 
 ## 项目由来
 
@@ -220,220 +434,6 @@ _keyed
 ```
 
 示例：
-
-```text
-character.png -> character_keyed.png
-```
-
----
-
-## English
-
-Lightweight batch keying and color-adjustment tool for green-screen character images, AI-generated assets, game sprites, and poster-compositing workflows. It provides low/high matte threshold controls similar in spirit to DaVinci Resolve Delta Keyer, plus practical production features such as batch processing, full-resolution preview, multiple profiles, and tone-only processing.
-
-## Project Origin
-
-This free and open-source tool was created while building the art-production pipeline for **Echoes of Greed / Echoes of Desire - Chaos Void**. The project involves a lot of AI-generated characters, green-screen keying, poster compositing, and game-asset cleanup. Opening a full video-editing suite just to batch-key images and do light tone matching felt too heavy, so this tool grew out of that workflow.
-
-If the tool helps you, please consider checking out and supporting the game:
-
-- Patreon: [https://www.patreon.com/icefox57](https://www.patreon.com/icefox57)
-- X: [https://x.com/icefox_lab](https://x.com/icefox_lab)
-
-You are also very welcome to try **Echoes of Greed**, the game project this tool was originally made for.
-
-## Features
-
-- Process a single image or an entire folder.
-- Supports PNG/JPG/WEBP/BMP/TIF input.
-- Exports PNG files with alpha, without overwriting source images.
-- Keying and tone adjustment are independent modules.
-- Supports key-only, tone-only, and key-plus-tone workflows.
-- Default `dominance` mode is optimized for green/blue screens and avoids making dark clothing semi-transparent.
-- Low/high threshold controls operate on the matte/alpha.
-- Optional edge soften and despill.
-- Brightness, contrast, saturation, and Gamma controls.
-- Built-in tone presets: `poster_soft`, `lighten`, and `muted`.
-- Full-resolution preview with zoom for inspecting hair, green edges, and semi-transparent details.
-- Hover tooltips for technical controls.
-- Multiple saved profiles, such as `Default`, `Profile A`, and `Profile B`.
-
-## Installation
-
-Requires Python 3.10+:
-
-```bash
-pip install pillow numpy
-```
-
-## Launching The GUI
-
-On Windows, double-click:
-
-```bat
-run_delta_keyer_gui.cmd
-```
-
-Or launch from a terminal:
-
-```bash
-python delta_keyer.py --gui
-```
-
-In the GUI, you can set:
-
-- Profile buttons at the top for switching workflows.
-- Add Profile, which copies the current settings into a new profile.
-- Input and output folders.
-- Whether keying is enabled.
-- Whether tone adjustment is enabled.
-- Key color, for example `#00FF00`.
-- Low/high thresholds, for example `0.3` / `0.9`.
-- Keying mode. Use `dominance` for green-screen characters by default.
-- Edge soften and despill.
-- Tone preset and manual controls: brightness, contrast, saturation, Gamma.
-- Recursive folder processing.
-- Output filename suffix.
-
-Settings are saved to `delta_keyer_config.json` and restored on the next launch.
-
-## Profiles
-
-The GUI starts with a default profile. Click `Add Profile` and enter a name such as `Profile A` or `Profile B`; a new button will appear at the top.
-
-Each profile stores:
-
-- Input/output paths
-- Keying enabled/disabled
-- Tone enabled/disabled
-- Key color
-- Low/high thresholds
-- Keying mode
-- Edge soften
-- Despill
-- Tone preset
-- Brightness, contrast, saturation, Gamma
-- Preview zoom
-- Recursive mode
-- Output suffix
-
-When switching profiles, the tool saves the current profile before loading the selected one.
-
-## Tone Tips
-
-If a green-screen character looks too dark after keying, start with the `poster_soft` preset. It brightens the character, lowers contrast, and slightly reduces saturation, which often fits soft poster-style compositions better.
-
-Controls:
-
-- Brightness: overall light/dark adjustment.
-- Contrast: lowers or increases tonal hardness.
-- Saturation: controls color intensity.
-- Gamma: mainly affects midtones; values below `1` brighten midtones without pushing highlights as hard.
-
-## CLI Examples
-
-Key and apply a tone preset:
-
-```bash
-python delta_keyer.py "./input" \
-  -o "./output" \
-  --color "#00FF00" \
-  --low 0.3 \
-  --high 0.9 \
-  --metric dominance \
-  --preset poster_soft
-```
-
-Process subfolders recursively:
-
-```bash
-python delta_keyer.py "./input" \
-  -o "./output" \
-  --color "#00FF00" \
-  --low 0.3 \
-  --high 0.9 \
-  --metric dominance \
-  --recursive \
-  --brightness 1.18 \
-  --contrast 0.82 \
-  --saturation 0.88 \
-  --gamma 0.86
-```
-
-Tone only, no keying:
-
-```bash
-python delta_keyer.py "./poster.jpg" \
-  -o "./tone_only" \
-  --no-key \
-  --preset poster_soft
-```
-
-Key only, no tone adjustment:
-
-```bash
-python delta_keyer.py "./character.png" \
-  -o "./keyed" \
-  --no-tone \
-  --color "#00FF00" \
-  --low 0.3 \
-  --high 0.9
-```
-
-## CLI Options
-
-| Option | Description |
-| --- | --- |
-| `input` | Input image or folder |
-| `-o`, `--output` | Output folder |
-| `--no-key` | Disable keying and keep the original alpha |
-| `--no-tone` | Disable tone adjustment |
-| `-c`, `--color` | Key color, for example `#00FF00` or `0,255,0` |
-| `--low` | Low matte threshold, range `0-1` |
-| `--high` | High matte threshold, range `0-1` |
-| `--soften` | Alpha blur radius in pixels |
-| `--despill` | Key-color spill suppression, range `0-1` |
-| `--metric` | Keying mode: `dominance` or `rgb` |
-| `--preset` | Tone preset: `none`, `poster_soft`, `lighten`, `muted` |
-| `--brightness` | Brightness multiplier |
-| `--contrast` | Contrast multiplier |
-| `--saturation` | Saturation multiplier |
-| `--gamma` | Gamma; values below `1` brighten midtones |
-| `-r`, `--recursive` | Process subfolders |
-| `--suffix` | Output filename suffix |
-| `--gui` | Open the GUI |
-
-## Threshold Logic
-
-The default `dominance` mode is designed for green/blue screens. It first computes a raw foreground alpha: pixels that look like the key color get a lower alpha, while pixels that do not look like the key color get a higher alpha.
-
-Then it applies matte threshold logic:
-
-- Below the low threshold: forced to black matte, meaning transparent.
-- Above the high threshold: forced to white matte, meaning opaque.
-- Between the two thresholds: keeps a smooth alpha transition.
-
-`dominance` checks whether the key-color channel dominates the other channels. For green screen, that means the green channel must clearly dominate red and blue. This avoids the common RGB-distance failure where dark clothing or gray areas become semi-transparent.
-
-`rgb` mode computes raw foreground alpha using normalized RGB distance from the key color, then applies the same low/high threshold logic.
-
-DaVinci Resolve Delta Keyer is not an open implementation, so this tool aims for similar control behavior and practical results, not pixel-perfect equivalence.
-
-## Output
-
-All outputs are PNG files:
-
-```text
-<source filename><suffix>.png
-```
-
-Default suffix:
-
-```text
-_keyed
-```
-
-Example:
 
 ```text
 character.png -> character_keyed.png
