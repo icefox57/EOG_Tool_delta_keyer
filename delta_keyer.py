@@ -269,6 +269,8 @@ def run_gui() -> None:
 
     input_var = tk.StringVar(value=str(config.get("input", str(Path.cwd()))))
     output_var = tk.StringVar(value=str(config.get("output", str(Path.cwd() / "_keyed_output"))))
+    saved_language = str(config.get("language", "中文"))
+    language_var = tk.StringVar(value="English" if saved_language in {"en", "English"} else "中文")
     enable_keying_var = tk.BooleanVar(value=bool(config.get("enable_keying", True)))
     enable_tone_var = tk.BooleanVar(value=bool(config.get("enable_tone", True)))
     color_var = tk.StringVar(value=str(config.get("color", "#00FF00")))
@@ -290,28 +292,154 @@ def run_gui() -> None:
     preview_base: dict[str, Image.Image | None] = {"image": None}
 
     tooltips: list[object] = []
+    ui_text_widgets: list[tuple[tk.Widget, str]] = []
     help_text = {
-        "input": "读取单张图片或整个文件夹。支持 PNG/JPG/WEBP/BMP/TIF。",
-        "output": "输出带 alpha 的 PNG，不覆盖原图。批处理会保留子目录结构。",
-        "profile": "配置档会保存当前所有参数。切换配置前会自动保存当前配置，然后载入目标配置。",
-        "add_profile": "新增一套配置档。新配置会复制当前参数作为起点，之后可以独立调整。",
-        "enable_keying": "控制是否执行抠图。关闭后不会生成透明背景，只保留原图 alpha，可单独使用调色功能。",
-        "enable_tone": "控制是否执行调色。关闭后只做抠图；打开后可单独或配合抠图调整亮度、对比度、饱和度和 Gamma。",
-        "color": "抠图关键颜色。EOG 绿幕通常用 #00FF00；如果 AI 生成的绿幕偏暗，仍可先保留这个颜色并使用 dominance 模式。",
-        "low": "低阈值作用在最终 matte/alpha 上：低于它的区域会压成透明。提高它可以清掉更多灰边和绿幕残留。",
-        "high": "高阈值作用在最终 matte/alpha 上：高于它的区域会压成不透明。降低它可以让主体边缘更快变实。",
-        "soften": "边缘柔化会对 alpha 做轻微模糊。适合软化锯齿，但过高会让边缘发虚。",
-        "despill": "去溢色会削弱边缘的绿幕染色。绿色反光明显时提高一点，通常 0.1-0.4 就够。",
-        "metric": "dominance 适合绿幕/蓝幕：看关键色通道是否明显占主导。rgb 是旧的 RGB 距离模式，容易误伤暗色衣服，只在特殊抠色时用。",
-        "preset": "调色预设会同时设置亮度、对比度、饱和度和 Gamma。poster_soft 适合接近 main_V2.jpg 那种浅色柔和海报感。",
-        "brightness": "亮度控制整体明暗。人物抠完太黑时先提高它。",
-        "contrast": "对比度控制黑白层次硬不硬。降低后黑色不那么死，画面更柔。",
-        "saturation": "饱和度控制颜色浓淡。降低后更淡、更接近纸面海报；提高后颜色更浓。",
-        "gamma": "Gamma 主要影响中间调。低于 1 会提亮中间调，适合人物整体偏暗但高光不想过曝的情况。",
-        "recursive": "开启后会处理输入文件夹里的所有子文件夹。",
-        "suffix": "输出文件名后缀。例如 _keyed 会生成 name_keyed.png。",
-        "zoom": "预览缩放只影响查看，不影响输出。预览使用原图分辨率渲染，放大到 200%/400% 可检查发丝、绿边和半透明边缘。",
+        "zh": {
+            "input": "读取单张图片或整个文件夹。支持 PNG/JPG/WEBP/BMP/TIF。",
+            "output": "输出带 alpha 的 PNG，不覆盖原图。批处理会保留子目录结构。",
+            "profile": "配置档会保存当前所有参数。切换配置前会自动保存当前配置，然后载入目标配置。",
+            "add_profile": "新增一套配置档。新配置会复制当前参数作为起点，之后可以独立调整。",
+            "language": "切换界面语言。语言选择会随当前配置保存。",
+            "enable_keying": "控制是否执行抠图。关闭后不会生成透明背景，只保留原图 alpha，可单独使用调色功能。",
+            "enable_tone": "控制是否执行调色。关闭后只做抠图；打开后可单独或配合抠图调整亮度、对比度、饱和度和 Gamma。",
+            "color": "抠图关键颜色。EOG 绿幕通常用 #00FF00；如果 AI 生成的绿幕偏暗，仍可先保留这个颜色并使用 dominance 模式。",
+            "low": "低阈值作用在最终 matte/alpha 上：低于它的区域会压成透明。提高它可以清掉更多灰边和绿幕残留。",
+            "high": "高阈值作用在最终 matte/alpha 上：高于它的区域会压成不透明。降低它可以让主体边缘更快变实。",
+            "soften": "边缘柔化会对 alpha 做轻微模糊。适合软化锯齿，但过高会让边缘发虚。",
+            "despill": "去溢色会削弱边缘的绿幕染色。绿色反光明显时提高一点，通常 0.1-0.4 就够。",
+            "metric": "dominance 适合绿幕/蓝幕：看关键色通道是否明显占主导。rgb 是旧的 RGB 距离模式，容易误伤暗色衣服，只在特殊抠色时用。",
+            "preset": "调色预设会同时设置亮度、对比度、饱和度和 Gamma。poster_soft 适合接近浅色柔和海报感。",
+            "brightness": "亮度控制整体明暗。人物抠完太黑时先提高它。",
+            "contrast": "对比度控制黑白层次硬不硬。降低后黑色不那么死，画面更柔。",
+            "saturation": "饱和度控制颜色浓淡。降低后更淡、更接近纸面海报；提高后颜色更浓。",
+            "gamma": "Gamma 主要影响中间调。低于 1 会提亮中间调，适合人物整体偏暗但高光不想过曝的情况。",
+            "recursive": "开启后会处理输入文件夹里的所有子文件夹。",
+            "suffix": "输出文件名后缀。例如 _keyed 会生成 name_keyed.png。",
+            "zoom": "预览缩放只影响查看，不影响输出。预览使用原图分辨率渲染，放大到 200%/400% 可检查发丝、绿边和半透明边缘。",
+        },
+        "en": {
+            "input": "Read a single image or a folder. Supports PNG/JPG/WEBP/BMP/TIF.",
+            "output": "Exports PNG files with alpha and does not overwrite source images. Batch mode preserves subfolders.",
+            "profile": "Profiles save all current parameters. Switching profiles saves the current one before loading the target profile.",
+            "add_profile": "Create a new profile by copying the current settings. You can tune it independently afterward.",
+            "language": "Switch the interface language. The language choice is saved with the current profile.",
+            "enable_keying": "Enable or disable keying. Turn this off to keep the original alpha and use tone adjustment only.",
+            "enable_tone": "Enable or disable tone adjustment. Use it alone or together with keying.",
+            "color": "Key color. EOG green-screen assets usually use #00FF00. For darker AI green screens, keep this color and use dominance mode.",
+            "low": "Low threshold on the final matte/alpha. Pixels below it become transparent. Increase it to remove more fringe or residue.",
+            "high": "High threshold on the final matte/alpha. Pixels above it become opaque. Lower it to make subject edges become solid sooner.",
+            "soften": "Softens the alpha edge with a small blur. Useful for jagged edges, but too much makes edges fuzzy.",
+            "despill": "Reduces key-color spill around edges. Use a small value such as 0.1-0.4 when green spill is visible.",
+            "metric": "dominance is best for green/blue screens. rgb uses RGB distance and can make dark clothes semi-transparent.",
+            "preset": "Tone presets set brightness, contrast, saturation, and Gamma together. poster_soft is useful for soft poster-style matching.",
+            "brightness": "Controls overall brightness. Raise it when the keyed character looks too dark.",
+            "contrast": "Controls tonal hardness. Lower values make dark areas less crushed and the image softer.",
+            "saturation": "Controls color intensity. Lower values make colors more muted; higher values make colors stronger.",
+            "gamma": "Mostly affects midtones. Values below 1 brighten midtones without pushing highlights as hard.",
+            "recursive": "Process all subfolders inside the input folder.",
+            "suffix": "Output filename suffix. For example, _keyed creates name_keyed.png.",
+            "zoom": "Preview zoom only affects display, not output. The preview renders from original resolution for edge inspection.",
+        },
     }
+    labels = {
+        "zh": {
+            "profile_label": "配置",
+            "add_profile": "添加配置",
+            "language_label": "语言",
+            "input": "输入文件夹",
+            "output": "输出文件夹",
+            "browse": "浏览",
+            "key_frame": "抠图",
+            "enable_keying": "启用抠图",
+            "color": "关键颜色",
+            "pick": "拾取",
+            "low": "低阈值",
+            "high": "高阈值",
+            "soften": "边缘柔化",
+            "despill": "去溢色",
+            "metric": "抠图模式",
+            "tone_frame": "调色",
+            "enable_tone": "启用调色",
+            "preset": "调色预设",
+            "brightness": "亮度",
+            "contrast": "对比度",
+            "saturation": "饱和度",
+            "gamma": "Gamma",
+            "recursive": "递归处理子文件夹",
+            "suffix": "输出后缀",
+            "refresh": "刷新列表",
+            "process": "开始批量抠图",
+            "preview_header": "左：原图  /  右：处理结果预览",
+            "fit": "适合窗口",
+            "zoom": "预览缩放",
+            "add_profile_title": "添加配置",
+            "add_profile_prompt": "请输入配置名称：",
+            "profile_exists_title": "配置已存在",
+            "profile_exists_msg": "已经有名为“{name}”的配置。",
+            "input_dialog": "选择输入文件夹",
+            "output_dialog": "选择输出文件夹",
+            "preview_failed": "预览失败: {error}",
+            "param_error": "参数错误",
+            "processing": "开始批量处理...",
+            "done_log": "完成: 输出 {count} 张 PNG 到 {output}",
+            "error_prefix": "错误: ",
+            "done_title": "完成",
+            "done_msg": "已输出 {count} 张 PNG。",
+            "process_failed": "处理失败: {error}",
+        },
+        "en": {
+            "profile_label": "Profile",
+            "add_profile": "Add Profile",
+            "language_label": "Language",
+            "input": "Input Folder",
+            "output": "Output Folder",
+            "browse": "Browse",
+            "key_frame": "Keying",
+            "enable_keying": "Enable Keying",
+            "color": "Key Color",
+            "pick": "Pick",
+            "low": "Low Threshold",
+            "high": "High Threshold",
+            "soften": "Edge Soften",
+            "despill": "Despill",
+            "metric": "Keying Mode",
+            "tone_frame": "Tone",
+            "enable_tone": "Enable Tone",
+            "preset": "Tone Preset",
+            "brightness": "Brightness",
+            "contrast": "Contrast",
+            "saturation": "Saturation",
+            "gamma": "Gamma",
+            "recursive": "Process Subfolders",
+            "suffix": "Output Suffix",
+            "refresh": "Refresh List",
+            "process": "Start Batch Processing",
+            "preview_header": "Left: Source  /  Right: Processed Preview",
+            "fit": "Fit",
+            "zoom": "Preview Zoom",
+            "add_profile_title": "Add Profile",
+            "add_profile_prompt": "Enter profile name:",
+            "profile_exists_title": "Profile Exists",
+            "profile_exists_msg": "A profile named \"{name}\" already exists.",
+            "input_dialog": "Select Input Folder",
+            "output_dialog": "Select Output Folder",
+            "preview_failed": "Preview failed: {error}",
+            "param_error": "Parameter Error",
+            "processing": "Starting batch processing...",
+            "done_log": "Done: wrote {count} PNG file(s) to {output}",
+            "error_prefix": "Error: ",
+            "done_title": "Done",
+            "done_msg": "Wrote {count} PNG file(s).",
+            "process_failed": "Processing failed: {error}",
+        },
+    }
+
+    def lang() -> str:
+        return "en" if language_var.get() in {"en", "English"} else "zh"
+
+    def tr(key: str, **kwargs: object) -> str:
+        text = labels[lang()].get(key, labels["zh"].get(key, key))
+        return text.format(**kwargs)
 
     class Tooltip:
         def __init__(self, widget: tk.Widget, text: str) -> None:
@@ -335,6 +463,7 @@ def run_gui() -> None:
         def show(self) -> None:
             if self.tip is not None:
                 return
+            tooltip_text = help_text[lang()].get(self.text, self.text)
             x = self.widget.winfo_rootx() + 18
             y = self.widget.winfo_rooty() + self.widget.winfo_height() + 8
             self.tip = tk.Toplevel(self.widget)
@@ -342,7 +471,7 @@ def run_gui() -> None:
             self.tip.wm_geometry(f"+{x}+{y}")
             label = tk.Label(
                 self.tip,
-                text=self.text,
+                text=tooltip_text,
                 justify="left",
                 wraplength=360,
                 background="#fff8d8",
@@ -361,16 +490,29 @@ def run_gui() -> None:
                 self.tip = None
 
     def add_tooltip(widget: tk.Widget, key: str) -> tk.Widget:
-        text = help_text.get(key)
-        if text:
-            tooltips.append(Tooltip(widget, text))
+        if key in help_text["zh"]:
+            tooltips.append(Tooltip(widget, key))
         return widget
 
     def help_label(parent: tk.Widget, text: str, key: str) -> tk.Widget:
-        label = ttk.Label(parent, text=text)
+        label = ttk.Label(parent, text=tr(key))
+        ui_text_widgets.append((label, key))
         add_tooltip(label, key)
         label.pack(anchor="w")
         return label
+
+    def bind_text(widget: tk.Widget, key: str) -> tk.Widget:
+        widget.configure(text=tr(key))
+        ui_text_widgets.append((widget, key))
+        return widget
+
+    def refresh_language() -> None:
+        for widget, key in ui_text_widgets:
+            try:
+                widget.configure(text=tr(key))
+            except Exception:
+                pass
+        save_current_config()
 
     def settings_from_ui() -> KeyerSettings:
         return KeyerSettings(
@@ -393,6 +535,7 @@ def run_gui() -> None:
             "geometry": root.geometry(),
             "input": input_var.get(),
             "output": output_var.get(),
+            "language": lang(),
             "enable_keying": bool(enable_keying_var.get()),
             "enable_tone": bool(enable_tone_var.get()),
             "color": color_var.get(),
@@ -418,6 +561,8 @@ def run_gui() -> None:
     def apply_config(profile_config: dict[str, object]) -> None:
         input_var.set(str(profile_config.get("input", str(Path.cwd()))))
         output_var.set(str(profile_config.get("output", str(Path.cwd() / "_keyed_output"))))
+        saved_profile_language = str(profile_config.get("language", "中文"))
+        language_var.set("English" if saved_profile_language in {"en", "English"} else "中文")
         enable_keying_var.set(bool(profile_config.get("enable_keying", True)))
         enable_tone_var.set(bool(profile_config.get("enable_tone", True)))
         color_var.set(str(profile_config.get("color", "#00FF00")))
@@ -466,19 +611,20 @@ def run_gui() -> None:
         save_current_config()
         active_profile["name"] = name
         apply_config(profiles[name])
+        refresh_language()
         refresh_profile_buttons()
         refresh_file_list()
         save_current_config()
 
     def add_profile() -> None:
-        name = simpledialog.askstring("添加配置", "请输入配置名称：", parent=root)
+        name = simpledialog.askstring(tr("add_profile_title"), tr("add_profile_prompt"), parent=root)
         if not name:
             return
         name = name.strip()
         if not name:
             return
         if name in profiles:
-            messagebox.showwarning("配置已存在", f"已经有名为“{name}”的配置。")
+            messagebox.showwarning(tr("profile_exists_title"), tr("profile_exists_msg", name=name))
             return
         save_current_config()
         profiles[name] = dict(current_config())
@@ -504,7 +650,7 @@ def run_gui() -> None:
             update_preview()
 
     def browse_input() -> None:
-        folder = filedialog.askdirectory(title="选择输入文件夹")
+        folder = filedialog.askdirectory(title=tr("input_dialog"))
         if folder:
             input_var.set(folder)
             if output_var.get().endswith("_keyed_output"):
@@ -513,7 +659,7 @@ def run_gui() -> None:
             refresh_file_list()
 
     def browse_output() -> None:
-        folder = filedialog.askdirectory(title="选择输出文件夹")
+        folder = filedialog.askdirectory(title=tr("output_dialog"))
         if folder:
             output_var.set(folder)
             save_current_config()
@@ -566,7 +712,7 @@ def run_gui() -> None:
             render_preview_canvas()
             save_current_config()
         except Exception as exc:  # noqa: BLE001
-            log(f"预览失败: {exc}")
+            log(tr("preview_failed", error=exc))
 
     def set_zoom(value: float) -> None:
         zoom_var.set(value)
@@ -582,7 +728,7 @@ def run_gui() -> None:
         try:
             settings = settings_from_ui()
         except Exception as exc:  # noqa: BLE001
-            messagebox.showerror("参数错误", str(exc))
+            messagebox.showerror(tr("param_error"), str(exc))
             return
 
         input_path = Path(input_var.get())
@@ -592,15 +738,15 @@ def run_gui() -> None:
 
         def worker() -> None:
             try:
-                log("开始批量抠图...")
+                log(tr("processing"))
                 count, errors = process_path(input_path, output_root, settings, recursive_var.get(), suffix)
-                log(f"完成: 输出 {count} 张 PNG 到 {output_root}")
+                log(tr("done_log", count=count, output=output_root))
                 for err in errors:
-                    log("错误: " + err)
-                messagebox.showinfo("完成", f"已输出 {count} 张 PNG。")
+                    log(tr("error_prefix") + err)
+                messagebox.showinfo(tr("done_title"), tr("done_msg", count=count))
             except Exception as exc:  # noqa: BLE001
-                log(f"处理失败: {exc}")
-                messagebox.showerror("处理失败", str(exc))
+                log(tr("process_failed", error=exc))
+                messagebox.showerror(tr("process_failed", error=""), str(exc))
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -610,10 +756,27 @@ def run_gui() -> None:
 
     top_bar = ttk.Frame(root, padding=(12, 10, 12, 0))
     top_bar.pack(fill="x")
-    ttk.Label(top_bar, text="配置").pack(side="left", padx=(0, 8))
+    profile_label = ttk.Label(top_bar)
+    bind_text(profile_label, "profile_label")
+    profile_label.pack(side="left", padx=(0, 8))
     profile_buttons_frame = ttk.Frame(top_bar)
     profile_buttons_frame.pack(side="left", fill="x", expand=True)
-    add_profile_button = ttk.Button(top_bar, text="添加配置", command=add_profile)
+    language_label = ttk.Label(top_bar)
+    bind_text(language_label, "language_label")
+    add_tooltip(language_label, "language")
+    language_label.pack(side="left", padx=(10, 6))
+    language_box = ttk.Combobox(
+        top_bar,
+        textvariable=language_var,
+        values=("中文", "English"),
+        state="readonly",
+        width=6,
+    )
+    add_tooltip(language_box, "language")
+    language_box.pack(side="left", padx=(0, 10))
+    language_box.bind("<<ComboboxSelected>>", lambda _event: refresh_language())
+    add_profile_button = ttk.Button(top_bar, command=add_profile)
+    bind_text(add_profile_button, "add_profile")
     add_tooltip(add_profile_button, "add_profile")
     add_profile_button.pack(side="right")
     refresh_profile_buttons()
@@ -642,7 +805,8 @@ def run_gui() -> None:
     input_entry = ttk.Entry(row, textvariable=input_var, width=38)
     add_tooltip(input_entry, "input")
     input_entry.pack(side="left", fill="x", expand=True)
-    input_button = ttk.Button(row, text="浏览", command=browse_input)
+    input_button = ttk.Button(row, command=browse_input)
+    bind_text(input_button, "browse")
     add_tooltip(input_button, "input")
     input_button.pack(side="left", padx=(6, 0))
 
@@ -652,13 +816,16 @@ def run_gui() -> None:
     output_entry = ttk.Entry(row, textvariable=output_var, width=38)
     add_tooltip(output_entry, "output")
     output_entry.pack(side="left", fill="x", expand=True)
-    output_button = ttk.Button(row, text="浏览", command=browse_output)
+    output_button = ttk.Button(row, command=browse_output)
+    bind_text(output_button, "browse")
     add_tooltip(output_button, "output")
     output_button.pack(side="left", padx=(6, 0))
 
-    key_frame = ttk.LabelFrame(controls, text="抠图")
+    key_frame = ttk.LabelFrame(controls)
+    bind_text(key_frame, "key_frame")
     key_frame.pack(fill="x", pady=(4, 10), padx=(0, 2))
-    enable_keying_check = ttk.Checkbutton(key_frame, text="启用抠图", variable=enable_keying_var, command=update_preview)
+    enable_keying_check = ttk.Checkbutton(key_frame, variable=enable_keying_var, command=update_preview)
+    bind_text(enable_keying_check, "enable_keying")
     add_tooltip(enable_keying_check, "enable_keying")
     enable_keying_check.pack(anchor="w", padx=8, pady=(8, 6))
 
@@ -671,7 +838,8 @@ def run_gui() -> None:
     color_swatch = tk.Label(row, width=4, relief="sunken", background=color_var.get())
     add_tooltip(color_swatch, "color")
     color_swatch.pack(side="left", padx=6)
-    color_button = ttk.Button(row, text="拾取", command=choose_color)
+    color_button = ttk.Button(row, command=choose_color)
+    bind_text(color_button, "pick")
     add_tooltip(color_button, "color")
     color_button.pack(side="left")
 
@@ -705,9 +873,11 @@ def run_gui() -> None:
     metric_box.pack(anchor="w", pady=(2, 8))
     metric_box.bind("<<ComboboxSelected>>", update_preview)
 
-    tone_frame = ttk.LabelFrame(controls, text="调色")
+    tone_frame = ttk.LabelFrame(controls)
+    bind_text(tone_frame, "tone_frame")
     tone_frame.pack(fill="x", pady=(4, 10), padx=(0, 2))
-    enable_tone_check = ttk.Checkbutton(tone_frame, text="启用调色", variable=enable_tone_var, command=update_preview)
+    enable_tone_check = ttk.Checkbutton(tone_frame, variable=enable_tone_var, command=update_preview)
+    bind_text(enable_tone_check, "enable_tone")
     add_tooltip(enable_tone_check, "enable_tone")
     enable_tone_check.pack(anchor="w", padx=8, pady=(8, 6))
 
@@ -742,7 +912,8 @@ def run_gui() -> None:
         add_tooltip(value_label, key)
         value_label.pack(side="left")
 
-    recursive_check = ttk.Checkbutton(controls, text="递归处理子文件夹", variable=recursive_var, command=refresh_file_list)
+    recursive_check = ttk.Checkbutton(controls, variable=recursive_var, command=refresh_file_list)
+    bind_text(recursive_check, "recursive")
     add_tooltip(recursive_check, "recursive")
     recursive_check.pack(anchor="w", pady=(0, 8))
 
@@ -750,8 +921,12 @@ def run_gui() -> None:
     suffix_entry = ttk.Entry(controls, textvariable=suffix_var, width=16)
     add_tooltip(suffix_entry, "suffix")
     suffix_entry.pack(anchor="w", pady=(2, 12))
-    ttk.Button(controls, text="刷新列表", command=refresh_file_list).pack(fill="x")
-    ttk.Button(controls, text="开始批量抠图", command=process).pack(fill="x", pady=8)
+    refresh_button = ttk.Button(controls, command=refresh_file_list)
+    bind_text(refresh_button, "refresh")
+    refresh_button.pack(fill="x")
+    process_button = ttk.Button(controls, command=process)
+    bind_text(process_button, "process")
+    process_button.pack(fill="x", pady=8)
 
     list_box = tk.Listbox(controls, width=46, height=10)
     list_box.pack(fill="both", expand=False, pady=(8, 8))
@@ -762,8 +937,11 @@ def run_gui() -> None:
 
     preview_header = ttk.Frame(preview)
     preview_header.pack(fill="x")
-    ttk.Label(preview_header, text="左：原图  /  右：抠图结果预览").pack(side="left")
-    fit_button = ttk.Button(preview_header, text="适合窗口", command=lambda: set_zoom(1.0))
+    preview_header_label = ttk.Label(preview_header)
+    bind_text(preview_header_label, "preview_header")
+    preview_header_label.pack(side="left")
+    fit_button = ttk.Button(preview_header, command=lambda: set_zoom(1.0))
+    bind_text(fit_button, "fit")
     add_tooltip(fit_button, "zoom")
     fit_button.pack(side="right", padx=(4, 0))
     zoom_400_button = ttk.Button(preview_header, text="400%", command=lambda: set_zoom(4.0))
@@ -778,7 +956,8 @@ def run_gui() -> None:
 
     zoom_row = ttk.Frame(preview)
     zoom_row.pack(fill="x", pady=(8, 0))
-    zoom_label = ttk.Label(zoom_row, text="预览缩放")
+    zoom_label = ttk.Label(zoom_row)
+    bind_text(zoom_label, "zoom")
     add_tooltip(zoom_label, "zoom")
     zoom_label.pack(side="left")
     zoom_scale = ttk.Scale(zoom_row, from_=0.25, to=4.0, variable=zoom_var, command=lambda _value: (render_preview_canvas(), save_current_config()))

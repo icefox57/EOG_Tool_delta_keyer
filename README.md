@@ -4,7 +4,11 @@ English | [Chinese](#中文)
 
 ![EOG Delta Keyer preview](assets/eog-delta-keyer-preview.png)
 
-Lightweight batch keying and color-adjustment tool for green-screen character images, AI-generated assets, game sprites, and poster-compositing workflows. It provides low/high matte threshold controls similar in spirit to DaVinci Resolve Delta Keyer, plus practical production features such as batch processing, full-resolution preview, multiple profiles, and tone-only processing.
+Lightweight batch keying and color-adjustment tool for green-screen character images, AI-generated assets, game sprites, and poster-compositing workflows.
+
+This tool was born from a very practical production problem: after trying many green-screen keying tools, I kept coming back to **DaVinci Resolve Delta Keyer** because it produced the best matte results in my workflow. But opening a full video-editing suite just to key a folder of AI-generated images is heavy and slow, so EOG Delta Keyer recreates the key parts of that workflow in a smaller, faster utility.
+
+It also solves another common AI-image problem: green-screen characters often come out too dark, too contrasty, or too saturated compared with the final poster/game composition. That is why this is not only a keyer, but a combined **keying + tone matching** tool with brightness, contrast, saturation, Gamma, and reusable presets.
 
 ## Project Origin
 
@@ -31,6 +35,7 @@ You are also very welcome to try **Echoes of Greed**, the game project this tool
 - Built-in tone presets: `poster_soft`, `lighten`, and `muted`.
 - Full-resolution preview with zoom for inspecting hair, green edges, and semi-transparent details.
 - Hover tooltips for technical controls.
+- Bilingual GUI language switch: English / Chinese.
 - Multiple saved profiles, such as `Default`, `Profile A`, and `Profile B`.
 
 ## Installation
@@ -218,7 +223,11 @@ character.png -> character_keyed.png
 
 ## 中文
 
-轻量批量抠图与调色工具，面向绿幕角色图、AI 生成素材、游戏精灵图和宣传图合成工作流。它提供类似 DaVinci Resolve Delta Keyer 的低/高 matte 阈值控制，同时加入批处理、原图分辨率预览、多配置档、只调色模式等更适合日常素材生产的小工具能力。
+轻量批量抠图与调色工具，面向绿幕角色图、AI 生成素材、游戏精灵图和宣传图合成工作流。
+
+这个工具来自一个非常实际的生产问题：我原本一直使用 **DaVinci Resolve 的 Delta Keyer** 来做绿幕抠图，因为在测试过许多绿幕抠图软件后，我发现达芬奇的 matte 效果最稳定、最好用。但如果只是为了给一批 AI 生成图片抠图，就反复打开大型视频软件，整个流程会非常重。所以 EOG Delta Keyer 参考了这套低/高 matte 阈值工作方式，把它做成一个更轻、更快、适合批处理的小工具。
+
+它还解决了 AI 绿幕图的另一个常见问题：AI 单独生成的人物经常会颜色过深、对比度过硬、饱和度偏高，直接放进最终海报或游戏画面里会不协调。因此这个工具不只是抠图工具，也整合了 **抠图 + 调色匹配** 流程，支持亮度、对比度、饱和度、Gamma 和可复用预设。
 
 ## 项目由来
 
@@ -245,6 +254,7 @@ character.png -> character_keyed.png
 - 内置 `poster_soft`、`lighten`、`muted` 调色预设。
 - 原图分辨率预览，可放大到 200%/400% 检查发丝、绿边和半透明边缘。
 - 鼠标悬停参数时显示说明小窗。
+- GUI 支持中英文切换。
 - 支持多套配置档，例如“默认”“A配置”“B配置”，每套配置独立保存。
 
 ## 安装
