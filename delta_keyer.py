@@ -290,6 +290,8 @@ def run_gui() -> None:
     selected_image: dict[str, Path | None] = {"path": None}
     preview_photo: dict[str, ImageTk.PhotoImage | None] = {"image": None}
     preview_base: dict[str, Image.Image | None] = {"image": None}
+    preview_after_id: dict[str, str | None] = {"id": None}
+    suppress_preview_schedule = {"value": False}
 
     tooltips: list[object] = []
     ui_text_widgets: list[tuple[tk.Widget, str]] = []
@@ -559,26 +561,30 @@ def run_gui() -> None:
         save_config({"active_profile": active_profile["name"], "profiles": profiles})
 
     def apply_config(profile_config: dict[str, object]) -> None:
-        input_var.set(str(profile_config.get("input", str(Path.cwd()))))
-        output_var.set(str(profile_config.get("output", str(Path.cwd() / "_keyed_output"))))
-        saved_profile_language = str(profile_config.get("language", "中文"))
-        language_var.set("English" if saved_profile_language in {"en", "English"} else "中文")
-        enable_keying_var.set(bool(profile_config.get("enable_keying", True)))
-        enable_tone_var.set(bool(profile_config.get("enable_tone", True)))
-        color_var.set(str(profile_config.get("color", "#00FF00")))
-        low_var.set(float(profile_config.get("low", 0.30)))
-        high_var.set(float(profile_config.get("high", 0.90)))
-        soften_var.set(float(profile_config.get("soften", 0.0)))
-        despill_var.set(float(profile_config.get("despill", 0.0)))
-        metric_var.set(str(profile_config.get("metric", "dominance")))
-        preset_var.set(str(profile_config.get("preset", "none")))
-        brightness_var.set(float(profile_config.get("brightness", 1.0)))
-        contrast_var.set(float(profile_config.get("contrast", 1.0)))
-        saturation_var.set(float(profile_config.get("saturation", 1.0)))
-        gamma_var.set(float(profile_config.get("gamma", 1.0)))
-        zoom_var.set(float(profile_config.get("zoom", 1.0)))
-        recursive_var.set(bool(profile_config.get("recursive", False)))
-        suffix_var.set(str(profile_config.get("suffix", "_keyed")))
+        suppress_preview_schedule["value"] = True
+        try:
+            input_var.set(str(profile_config.get("input", str(Path.cwd()))))
+            output_var.set(str(profile_config.get("output", str(Path.cwd() / "_keyed_output"))))
+            saved_profile_language = str(profile_config.get("language", "中文"))
+            language_var.set("English" if saved_profile_language in {"en", "English"} else "中文")
+            enable_keying_var.set(bool(profile_config.get("enable_keying", True)))
+            enable_tone_var.set(bool(profile_config.get("enable_tone", True)))
+            color_var.set(str(profile_config.get("color", "#00FF00")))
+            low_var.set(float(profile_config.get("low", 0.30)))
+            high_var.set(float(profile_config.get("high", 0.90)))
+            soften_var.set(float(profile_config.get("soften", 0.0)))
+            despill_var.set(float(profile_config.get("despill", 0.0)))
+            metric_var.set(str(profile_config.get("metric", "dominance")))
+            preset_var.set(str(profile_config.get("preset", "none")))
+            brightness_var.set(float(profile_config.get("brightness", 1.0)))
+            contrast_var.set(float(profile_config.get("contrast", 1.0)))
+            saturation_var.set(float(profile_config.get("saturation", 1.0)))
+            gamma_var.set(float(profile_config.get("gamma", 1.0)))
+            zoom_var.set(float(profile_config.get("zoom", 1.0)))
+            recursive_var.set(bool(profile_config.get("recursive", False)))
+            suffix_var.set(str(profile_config.get("suffix", "_keyed")))
+        finally:
+            suppress_preview_schedule["value"] = False
 
     profile_buttons: dict[str, tk.Button] = {}
 
@@ -670,7 +676,7 @@ def run_gui() -> None:
         if picked:
             color_var.set(picked.upper())
             color_swatch.configure(background=picked)
-            update_preview()
+            schedule_preview()
 
     def apply_preset(_event: object | None = None) -> None:
         preset = TONE_PRESETS.get(preset_var.get(), TONE_PRESETS["none"])
@@ -678,7 +684,7 @@ def run_gui() -> None:
         contrast_var.set(preset["contrast"])
         saturation_var.set(preset["saturation"])
         gamma_var.set(preset["gamma"])
-        update_preview()
+        schedule_preview()
 
     def on_list_select(_event: object | None = None) -> None:
         selected = list_box.curselection()
@@ -699,7 +705,31 @@ def run_gui() -> None:
         preview_canvas.create_image(0, 0, image=preview_photo["image"], anchor="nw")
         preview_canvas.configure(scrollregion=(0, 0, w, h))
 
+    def cancel_scheduled_preview() -> None:
+        if preview_after_id["id"] is not None:
+            try:
+                root.after_cancel(preview_after_id["id"])
+            except Exception:
+                pass
+            preview_after_id["id"] = None
+
+    def run_scheduled_preview() -> None:
+        preview_after_id["id"] = None
+        update_preview()
+
+    def schedule_preview(_event: object | None = None) -> None:
+        if suppress_preview_schedule["value"]:
+            return
+        try:
+            color_swatch.configure(background=color_var.get())
+        except Exception:
+            pass
+        cancel_scheduled_preview()
+        preview_after_id["id"] = root.after(2000, run_scheduled_preview)
+        save_current_config()
+
     def update_preview(_event: object | None = None) -> None:
+        cancel_scheduled_preview()
         try:
             settings = settings_from_ui()
             color_swatch.configure(background=color_to_hex(settings.key_color))
@@ -824,7 +854,7 @@ def run_gui() -> None:
     key_frame = ttk.LabelFrame(controls)
     bind_text(key_frame, "key_frame")
     key_frame.pack(fill="x", pady=(4, 10), padx=(0, 2))
-    enable_keying_check = ttk.Checkbutton(key_frame, variable=enable_keying_var, command=update_preview)
+    enable_keying_check = ttk.Checkbutton(key_frame, variable=enable_keying_var, command=schedule_preview)
     bind_text(enable_keying_check, "enable_keying")
     add_tooltip(enable_keying_check, "enable_keying")
     enable_keying_check.pack(anchor="w", padx=8, pady=(8, 6))
@@ -854,7 +884,7 @@ def run_gui() -> None:
         row = ttk.Frame(key_frame)
         row.pack(fill="x", pady=(2, 8))
         scale_to = 8.0 if text == "边缘柔化" else 1.0
-        scale = ttk.Scale(row, from_=0.0, to=scale_to, variable=var, command=update_preview)
+        scale = ttk.Scale(row, from_=0.0, to=scale_to, variable=var, command=schedule_preview)
         add_tooltip(scale, key)
         scale.pack(side="left", fill="x", expand=True)
         value_label = ttk.Label(row, textvariable=var, width=6)
@@ -871,12 +901,12 @@ def run_gui() -> None:
     )
     add_tooltip(metric_box, "metric")
     metric_box.pack(anchor="w", pady=(2, 8))
-    metric_box.bind("<<ComboboxSelected>>", update_preview)
+    metric_box.bind("<<ComboboxSelected>>", schedule_preview)
 
     tone_frame = ttk.LabelFrame(controls)
     bind_text(tone_frame, "tone_frame")
     tone_frame.pack(fill="x", pady=(4, 10), padx=(0, 2))
-    enable_tone_check = ttk.Checkbutton(tone_frame, variable=enable_tone_var, command=update_preview)
+    enable_tone_check = ttk.Checkbutton(tone_frame, variable=enable_tone_var, command=schedule_preview)
     bind_text(enable_tone_check, "enable_tone")
     add_tooltip(enable_tone_check, "enable_tone")
     enable_tone_check.pack(anchor="w", padx=8, pady=(8, 6))
@@ -905,7 +935,7 @@ def run_gui() -> None:
         help_label(tone_frame, text, key)
         row = ttk.Frame(tone_frame)
         row.pack(fill="x", pady=(2, 8))
-        scale = ttk.Scale(row, from_=scale_from, to=scale_to, variable=var, command=update_preview)
+        scale = ttk.Scale(row, from_=scale_from, to=scale_to, variable=var, command=schedule_preview)
         add_tooltip(scale, key)
         scale.pack(side="left", fill="x", expand=True)
         value_label = ttk.Label(row, textvariable=var, width=6)
@@ -982,7 +1012,7 @@ def run_gui() -> None:
 
     for var in (color_var, low_var, high_var, soften_var, despill_var, metric_var, brightness_var, contrast_var, saturation_var, gamma_var):
         try:
-            var.trace_add("write", update_preview)
+            var.trace_add("write", schedule_preview)
         except Exception:
             pass
 

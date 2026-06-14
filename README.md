@@ -34,6 +34,7 @@ You are also very welcome to try **Echoes of Greed**, the game project this tool
 - Brightness, contrast, saturation, and Gamma controls.
 - Built-in tone presets: `poster_soft`, `lighten`, and `muted`.
 - Full-resolution preview with zoom for inspecting hair, green edges, and semi-transparent details.
+- Debounced preview refresh: parameter changes update the preview after you stop adjusting for about 2 seconds.
 - Hover tooltips for technical controls.
 - Bilingual GUI language switch: English / Chinese.
 - Multiple saved profiles, such as `Default`, `Profile A`, and `Profile B`.
@@ -253,6 +254,7 @@ character.png -> character_keyed.png
 - 支持亮度、对比度、饱和度、Gamma 调色。
 - 内置 `poster_soft`、`lighten`、`muted` 调色预设。
 - 原图分辨率预览，可放大到 200%/400% 检查发丝、绿边和半透明边缘。
+- 预览刷新带 2 秒防抖：调整参数时不会连续重算，停止操作后再更新。
 - 鼠标悬停参数时显示说明小窗。
 - GUI 支持中英文切换。
 - 支持多套配置档，例如“默认”“A配置”“B配置”，每套配置独立保存。
